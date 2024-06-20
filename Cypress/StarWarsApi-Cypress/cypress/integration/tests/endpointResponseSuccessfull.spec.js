@@ -15,7 +15,6 @@ context('tests', () => {
             expect(response.body.films.length).to.eq(6);
             const responsePeople2 = response.body.films[1];
 
-           
             //Solicitando el endpoint de la segunda película, utilizando la respuesta anterior
             cy.request({
                 method: 'GET',
@@ -56,8 +55,14 @@ context('tests', () => {
                         expect(firstPlanetEndpoint.status).to.eq(200);
                         //Verificando el nombre, el terreno y la gravedad del planeta.
                         expect(firstPlanetEndpoint.body.name).to.eq('Tatooine');
-                        expect(firstPlanetEndpoint.body.terrain).to.eq(fixtures.);
-                        expect(firstPlanetEndpoint.body.gravity).to.eq('1 standard');
+                        cy.fixture("terrainsAndGravities").as("terrainAndGravity");
+
+                        cy.get('@terrainAndGravity').then(terrainAndGravity => {
+                            // Aquí asumimos que tAndG es un objeto con las propiedades 'terrain' y 'gravity'
+                            expect(firstPlanetEndpoint.body.terrain).to.eq(terrainAndGravity.terrain);
+                            expect(firstPlanetEndpoint.body.gravity).to.eq(terrainAndGravity.gravity);
+                        });
+
                         //Resolicitando el endpoint para volver a comparar el cuerpo de su respuesta.
                         cy.request({
                             method: 'GET',
