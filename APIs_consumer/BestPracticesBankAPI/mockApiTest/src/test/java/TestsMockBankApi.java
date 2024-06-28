@@ -38,25 +38,25 @@ public class TestsMockBankApi {
     }
 
     @Test
-    public void pruebaCrearUsuarios(){
+    public void pruebaCrearUsuarios() {
         Faker faker = new Faker();
 
         List<Map<String, Object>> users = new ArrayList<>();
 
-       Set<String> correos = new HashSet<>();
+        Set<String> correos = new HashSet<>();
 
         for (int i = 1; i <= 10; i++) {
 
             String email;
 
-            do{
+            do {
                 email = faker.internet().emailAddress();
 
-            }while(correos.contains(email));
+            } while (correos.contains(email));
 
             correos.add(email);
 
-            Map<String,Object> user = new HashMap<>();
+            Map<String, Object> user = new HashMap<>();
             Map<String, Object> account = new HashMap<>();
 
             account.put("accountNumber", faker.number().randomNumber());
@@ -73,20 +73,21 @@ public class TestsMockBankApi {
         }
 
 
-      for (Map<String, Object> user: users){
-          Response response = given().contentType("application/json")
-                  .body(user)
-                  .when()
-                  .post("https://665145ff20f4f4c4427756bc.mockapi.io/api/v1/users");
-          Assert.assertEquals(response.getStatusCode(), 201, "Error al crear el usuario: " + user.get("email"));
+        for (Map<String, Object> user : users) {
+            Response response = given().contentType("application/json")
+                    .body(user)
+                    .when()
+                    .post("https://665145ff20f4f4c4427756bc.mockapi.io/api/v1/users");
+            Assert.assertEquals(response.getStatusCode(), 201, "Error al crear el usuario: " + user.get("email"));
 
-          System.out.println(response.asString());
-      }
+            System.out.println(response.asString());
+        }
 
 
     }
-@Test
-    public void verificandoDuplicaciónDeCorreos(){
+
+    @Test
+    public void verificandoDuplicaciónDeCorreos() {
 
         Response response = given().when().get("https://665145ff20f4f4c4427756bc.mockapi.io/api/v1/users");
 
@@ -95,10 +96,10 @@ public class TestsMockBankApi {
 
         Set<String> emailSet = new HashSet<>();
 
-        for (String correo : correos){
+        for (String correo : correos) {
 
-            if (correo != null){
-                if(!emailSet.add(correo)){
+            if (correo != null) {
+                if (!emailSet.add(correo)) {
                     System.out.println("ALERTA: correo duplicado" + correo);
                 }
             }
@@ -106,75 +107,106 @@ public class TestsMockBankApi {
         Assert.assertEquals(emailSet.size(), correos.size());
 
     }
-@Test
-public void actualizandoNumeroDeCuenta() {
-    RestAssured.baseURI = "https://665145ff20f4f4c4427756bc.mockapi.io/api/v1";
 
-    Response response = given()
-            .when()
-            .get("/users/5")
-            .then()
-            .statusCode(200)
-            .extract().response();
+    @Test
+    public void actualizandoNumeroDeCuenta() {
+        RestAssured.baseURI = "https://665145ff20f4f4c4427756bc.mockapi.io/api/v1";
 
-    Map<String, Object> user = response.jsonPath().getMap("");
+        Response response = given()
+                .when()
+                .get("/users/5")
+                .then()
+                .statusCode(200)
+                .extract().response();
 
-    Map<String, Object> account = (Map<String, Object>) user.get("account");
-    account.put("accountNumber", 987654321);
+        Map<String, Object> user = response.jsonPath().getMap("");
 
-
-    RestAssured.given()
-            .contentType(ContentType.JSON)
-            .body(user)
-            .patch("/users/5")
-            .then()
-            .statusCode(200)
-            .log().body()
-            .extract().response();
+        Map<String, Object> account = (Map<String, Object>) user.get("account");
+        account.put("accountNumber", 987654321);
 
 
-    response = given()
-            .when()
-            .get("/users/5")
-            .then()
-            .statusCode(200)
-            .extract().response();
-
-    System.out.println("Numero de cuenta despues de modificar " + response.asString());
-}
-
-@Test
-public void verificaciónDeDeposito(){
-
-    RestAssured.baseURI = "https://665145ff20f4f4c4427756bc.mockapi.io/api/v1";
-
-    Response response = given()
-            .get("/users/6")
-            .then()
-            .statusCode(200)
-            .extract().response();
+        RestAssured.given()
+                .contentType(ContentType.JSON)
+                .body(user)
+                .patch("/users/5")
+                .then()
+                .statusCode(200)
+                .log().body()
+                .extract().response();
 
 
-     Map<String, Object> user = response.jsonPath().getMap("");
-     Map<String, Object> accountMoney = (Map <String, Object>)  user.get("account");
+        response = given()
+                .when()
+                .get("/users/5")
+                .then()
+                .statusCode(200)
+                .extract().response();
 
-    double dineroActual = response.jsonPath().getDouble("account.money");
-    double nuevoValor = dineroActual + 320.20;
+        System.out.println("Numero de cuenta despues de modificar " + response.asString());
+    }
+
+    @Test
+    public void verificaciónDeDeposito() {
+
+        RestAssured.baseURI = "https://665145ff20f4f4c4427756bc.mockapi.io/api/v1";
+
+        Response response = given()
+                .get("/users/6")
+                .then()
+                .statusCode(200)
+                .extract().response();
 
 
-    accountMoney.put("money", nuevoValor);
+        Map<String, Object> user = response.jsonPath().getMap("");
+        Map<String, Object> accountMoney = (Map<String, Object>) user.get("account");
 
-     RestAssured.given()
-             .contentType(ContentType.JSON)
-             .body(user)
-             .patch("users/6")
-             .then()
-             .statusCode(200)
-             .log().body()
-             .extract().response();
+        double dineroActual = response.jsonPath().getDouble("account.money");
+        double nuevoValor = dineroActual + 320.20;
 
-     System.out.println(response.asString());
 
+        accountMoney.put("money", nuevoValor);
+
+        RestAssured.given()
+                .contentType(ContentType.JSON)
+                .body(user)
+                .patch("users/6")
+                .then()
+                .statusCode(200)
+                .log().body()
+                .extract().response();
+
+        System.out.println(response.asString());
+
+    }
+
+    @Test
+    public void verificacionDeRetiroDinero(){
+        RestAssured.baseURI = "https://665145ff20f4f4c4427756bc.mockapi.io/api/v1";
+
+        Response response = given()
+                .get("/users/9")
+                .then()
+                .statusCode(200)
+                .extract().response();
+
+        Map<String, Object> user = response.jsonPath().getMap("");
+        Map<String, Object> accountMoney = (Map<String, Object>) user.get("account");
+
+        double dineroActual = response.jsonPath().getDouble("account.money");
+        double extraccion = dineroActual - 110.20;
+
+        accountMoney.put("money", extraccion);
+
+        RestAssured.given()
+                .contentType(ContentType.JSON)
+                .body(user)
+                .patch("users/9")
+                .then()
+                .statusCode(200)
+                .log().body()
+                .extract().response();
+
+        System.out.println(response.asString());
     }
 
 
