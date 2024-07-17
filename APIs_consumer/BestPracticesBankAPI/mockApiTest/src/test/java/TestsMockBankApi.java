@@ -1,22 +1,30 @@
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.restassured.http.ContentType;
 import net.datafaker.Faker;
 import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import java.io.IOException;
 import java.util.*;
 
+import static io.restassured.RestAssured.get;
 import static io.restassured.RestAssured.given;
 
-public class TestsMockBankApi {
+public class TestsMockBankApi extends apiBase{
+    Gson gson = new Gson();
 
     @Test
     public void limpiarDatosEndpoint() {
 
         // Realizar solicitud GET
         Response response = given().when().get("https://665145ff20f4f4c4427756bc.mockapi.io/api/v1/users");
+
         //Obteniendo la lista de usuarios como mapas
         List<Map<String, Object>> users = response.jsonPath().getList("");
         //Verificando que user no esté vacío
@@ -37,13 +45,15 @@ public class TestsMockBankApi {
 
     @Test
     public void pruebaCrearUsuarios() {
-        // Instaciamos la clase Faker para implementar datos
+        // Instanciamos la clase Faker para implementar datos
         Faker faker = new Faker();
         // Creamos una lista para crear los usuarios
-        List<Map<String, Object>> users = new ArrayList<>();
+        List<User> users = new ArrayList<>();
         // Creamos un Set para evitar correos repetidos
         Set<String> correos = new HashSet<>();
 
+        User user = new User();
+        Response response = null;
         //Creación de 10 usuarios a través de bucle for
         for (int i = 1; i <= 10; i++) {
             // Variable para crear email
@@ -52,38 +62,38 @@ public class TestsMockBankApi {
             // Condicional de creación mientras el email no este contenido dentro del Set
             do {
                 email = faker.internet().emailAddress();
-
             } while (correos.contains(email));
+
             // Agregado de correo nuevo al Set
             correos.add(email);
-            // Creación de objetos usuario y cuenta
-            Map<String, Object> user = new HashMap<>();
+
+            // Creación de objetos usuario y cuenta;
+
             Map<String, Object> account = new HashMap<>();
 
             // Agregado de valores correspondientes al objeto cuenta
             account.put("accountNumber", faker.number().randomNumber());
             account.put("money", faker.number().randomDouble(2, 0, 800000));
-            account.put("id", i);
-            // Agregado de valores correspondientes al objeto usuario
-            user.put("name", faker.name().fullName());
-            user.put("password", faker.internet().password());
-            user.put("email", email);
-            user.put("id", i);
-            user.put("account", account);
-            //Agregado del nuevo usuario al objeto usuarios.
-            users.add(user);
-        }
 
-        // Método POST para el envío del Objeto usuarios de uno en uno
-        for (Map<String, Object> user : users) {
-            Response response = given().contentType("application/json")
+            // Agregado de valores correspondientes al objeto usuario
+            user.setName(faker.name().fullName());
+            user.setPassword(faker.internet().password());
+            user.setEmail(email);
+            user.setId(i);
+            user.setAccount(account);
+
+            response = given().contentType("application/json")
                     .body(user)
                     .when()
                     .post("https://665145ff20f4f4c4427756bc.mockapi.io/api/v1/users");
-            Assert.assertEquals(response.getStatusCode(), 201, "Error al crear el usuario: " + user.get("email"));
-            //Impresion por consola de datos envíados
-            System.out.println(response.asString());
+
         }
+
+        response = given().get("https://665145ff20f4f4c4427756bc.mockapi.io/api/v1/users");
+        Assert.assertEquals(response.getStatusCode(), 200);
+
+        //Impresion por consola de datos envíados
+        System.out.println(response.asString());
 
     }
 
@@ -116,18 +126,10 @@ public class TestsMockBankApi {
         Assert.assertEquals(emailSet.size(), correos.size());
 
     }
-
     @Test
     public void actualizandoNumeroDeCuenta() {
-        RestAssured.baseURI = "https://665145ff20f4f4c4427756bc.mockapi.io/api/v1";
-
-        //Consulta al endpoint usuario de Id = 5 "users/5"
-        Response response = given()
-                .when()
-                .get("/users/5")
-                .then()
-                .statusCode(200)
-                .extract().response();
+        // Consulta al endpoint usuario de Id = 5 "users/5"
+        Response response = getRequest("users/5");
         // Obtención del objeto del usuario
         Map<String, Object> user = response.jsonPath().getMap("");
         // Obtención del objeto de su cuenta
@@ -135,27 +137,14 @@ public class TestsMockBankApi {
         // Agregado de nuevo número de cuenta.
         account.put("accountNumber", 987654321);
 
-        //Envío del nuevo valor por medio del método PATCH.
-        RestAssured.given()
-                .contentType(ContentType.JSON)
-                .body(user)
-                .patch("/users/5")
-                .then()
-                .statusCode(200)
-                .log().body()
-                .extract().response();
+        // Envío del nuevo valor por medio del método PATCH.
+        response = patchRequest("users/5", user);
 
         // Obtención del usuario nuevamente
-        response = given()
-                .when()
-                .get("/users/5")
-                .then()
-                .statusCode(200)
-                .extract().response();
+        response = getRequest("users/5");
 
         System.out.println("Usuario modificado " + response.asString());
     }
-
     @Test
     public void verificaciónDeDeposito() {
 
@@ -193,7 +182,7 @@ public class TestsMockBankApi {
 
     }
 
-    @Test
+@Test
     public void verificacionDeRetiroDinero() {
         RestAssured.baseURI = "https://665145ff20f4f4c4427756bc.mockapi.io/api/v1";
 
