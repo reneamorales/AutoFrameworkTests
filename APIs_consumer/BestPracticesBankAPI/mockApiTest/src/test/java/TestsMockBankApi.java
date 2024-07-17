@@ -1,29 +1,16 @@
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
-import io.restassured.RestAssured;
 import io.restassured.response.Response;
-import io.restassured.http.ContentType;
 import net.datafaker.Faker;
 import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import java.io.IOException;
 import java.util.*;
 
-import static io.restassured.RestAssured.get;
-import static io.restassured.RestAssured.given;
-
 public class TestsMockBankApi extends apiBase{
-    Gson gson = new Gson();
-
     @Test
     public void limpiarDatosEndpoint() {
 
-        // Realizar solicitud GET
-        Response response = given().when().get("https://665145ff20f4f4c4427756bc.mockapi.io/api/v1/users");
+        // Realizar solicitud GET al endpoint "/users"
+        Response response = getRequest("/users");
 
         //Obteniendo la lista de usuarios como mapas
         List<Map<String, Object>> users = response.jsonPath().getList("");
@@ -31,14 +18,14 @@ public class TestsMockBankApi extends apiBase{
         if (!users.isEmpty()) {
             for (Map<String, Object> user : users) {
                 // Realizando solicitud DELETE para cada usuario usando su ID
-                given().when().delete("https://665145ff20f4f4c4427756bc.mockapi.io/api/v1/users/" + user.get("id"));
+                deleteRequest("users/" + user.get("id"));
             }
         }
 
         //Verificando que el endpoint se encuentre totalmente limpio
+        response = getRequest("/users");
 
-        response = given().when().get("https://665145ff20f4f4c4427756bc.mockapi.io/api/v1/users");
-
+        //Aserción de endpoint vacio
         Assert.assertTrue(response.jsonPath().getList("").isEmpty());
         System.out.println("Endpoint luego de limpiarlo: " + response.asString());
     }
@@ -47,8 +34,7 @@ public class TestsMockBankApi extends apiBase{
     public void pruebaCrearUsuarios() {
         // Instanciamos la clase Faker para implementar datos
         Faker faker = new Faker();
-        // Creamos una lista para crear los usuarios
-        List<User> users = new ArrayList<>();
+
         // Creamos un Set para evitar correos repetidos
         Set<String> correos = new HashSet<>();
 
@@ -59,7 +45,7 @@ public class TestsMockBankApi extends apiBase{
             // Variable para crear email
             String email;
 
-            // Condicional de creación mientras el email no este contenido dentro del Set
+            // Condicional de creación mientras el email NO este contenido dentro del Set
             do {
                 email = faker.internet().emailAddress();
             } while (correos.contains(email));
@@ -82,14 +68,12 @@ public class TestsMockBankApi extends apiBase{
             user.setId(i);
             user.setAccount(account);
 
-            response = given().contentType("application/json")
-                    .body(user)
-                    .when()
-                    .post("https://665145ff20f4f4c4427756bc.mockapi.io/api/v1/users");
+            //Agregando el nuevo Usuario al endpoint
+            response = postRequest("/users", user);
 
         }
-
-        response = given().get("https://665145ff20f4f4c4427756bc.mockapi.io/api/v1/users");
+        // Solicitud nuevamente para verificar la creación de los 10 usuarios
+        response = getRequest("/users");
         Assert.assertEquals(response.getStatusCode(), 200);
 
         //Impresion por consola de datos envíados
@@ -97,18 +81,15 @@ public class TestsMockBankApi extends apiBase{
 
     }
 
-
     @Test
     public void verificandoDuplicaciónDeCorreos() {
+        //Consulta al endpoint usuarios "/users"
+        Response response = getRequest("/users");
 
-        Response response = given().when().get("https://665145ff20f4f4c4427756bc.mockapi.io/api/v1/users");
+        //Obtenciion de valores de emails en una Lista
+        List<String> correos = response.jsonPath().getList("email");
 
-        // Creación de lista para correos del endpoint
-        List<String> correos = new ArrayList<>();
-        //Objención de valores de email
-        correos = response.jsonPath().getList("email");
-
-        // Variable Set para agregar correos
+        //Variable Set para agregar correos
         Set<String> emailSet = new HashSet<>();
 
         // Iteración del listado
@@ -118,7 +99,7 @@ public class TestsMockBankApi extends apiBase{
             if (correo != null) {
                 // Condicional de avisio si el correo no se puede agregar dentro del Set.
                 if (!emailSet.add(correo)) {
-                    System.out.println("ALERTA: correo duplicado" + correo);
+                    System.out.println("Correo duplicado" + correo);
                 }
             }
         }
@@ -128,16 +109,16 @@ public class TestsMockBankApi extends apiBase{
     }
     @Test
     public void actualizandoNumeroDeCuenta() {
-        // Consulta al endpoint usuario de Id = 5 "users/5"
+        //Consulta al endpoint usuario de Id = 5 "users/5"
         Response response = getRequest("users/5");
-        // Obtención del objeto del usuario
+        //Obtención del objeto del usuario
         Map<String, Object> user = response.jsonPath().getMap("");
-        // Obtención del objeto de su cuenta
+        //Obtención del objeto de su cuenta
         Map<String, Object> account = (Map<String, Object>) user.get("account");
-        // Agregado de nuevo número de cuenta.
+        //Agregado de nuevo número de cuenta.
         account.put("accountNumber", 987654321);
 
-        // Envío del nuevo valor por medio del método PATCH.
+        //Envío del nuevo valor por medio del método PATCH.
         response = patchRequest("users/5", user);
 
         // Obtención del usuario nuevamente
@@ -145,74 +126,53 @@ public class TestsMockBankApi extends apiBase{
 
         System.out.println("Usuario modificado " + response.asString());
     }
-    @Test
+@Test
     public void verificaciónDeDeposito() {
+        //Consulta al endpoint usuario de Id = 6 "users/6"
+        Response userJsonResponse6 = getRequest("/users/6");
 
-        RestAssured.baseURI = "https://665145ff20f4f4c4427756bc.mockapi.io/api/v1";
-
-        Response response = given()
-                .get("/users/6")
-                .then()
-                .statusCode(200)
-                .extract().response();
-
-        // Obtención del objeto del usuario
-        Map<String, Object> user = response.jsonPath().getMap("");
-        // Obtención del objeto de su cuenta
+        //Obtención del objeto del usuario
+        Map<String, Object> user = userJsonResponse6.jsonPath().getMap("");
+        //Obtención del objeto de su cuenta
         Map<String, Object> accountMoney = (Map<String, Object>) user.get("account");
 
-        // Obtención del valor de dinero actual
-        double dineroActual = response.jsonPath().getDouble("account.money");
+        //Obtención del valor de dinero actual
+        double dineroActual = userJsonResponse6.jsonPath().getDouble("account.money");
         double nuevoValor = dineroActual + 320.20;
 
-        // Agregado de nuevo valor
+        //Agregado de nuevo valor
         accountMoney.put("money", nuevoValor);
 
         //Envío a través de método PATCH
-        RestAssured.given()
-                .contentType(ContentType.JSON)
-                .body(user)
-                .patch("users/6")
-                .then()
-                .statusCode(200)
-                .log().body()
-                .extract().response();
-        //Impresión de Objeto envíado
-        System.out.println(response.asString());
+        userJsonResponse6 = patchRequest("users/6", user);
 
+        // Obtención del usuario nuevamente
+        userJsonResponse6 = getRequest("users/6");
+        System.out.println("Usuario modificado " + userJsonResponse6.asString());
     }
 
 @Test
     public void verificacionDeRetiroDinero() {
-        RestAssured.baseURI = "https://665145ff20f4f4c4427756bc.mockapi.io/api/v1";
+        //Consulta al endpoint usuario de Id = 9 "users/9"
+        Response userJsonResponse9 = getRequest("users/9");
 
-        Response response = given()
-                .get("/users/9")
-                .then()
-                .statusCode(200)
-                .extract().response();
         // Obtención del objeto del usuario y posteriormente su cuenta
-        Map<String, Object> user = response.jsonPath().getMap("");
+        Map<String, Object> user = userJsonResponse9.jsonPath().getMap("");
         Map<String, Object> accountMoney = (Map<String, Object>) user.get("account");
 
         //Obtenición de valor actual de dinero.
-        double dineroActual = response.jsonPath().getDouble("account.money");
+        double dineroActual = userJsonResponse9.jsonPath().getDouble("account.money");
         double extraccion = dineroActual - 110.20; // Descuento de valor
 
         //Agregado del nuevo valor al objeto money
         accountMoney.put("money", extraccion);
 
         //Envío de valores a través de método PATCH
-        RestAssured.given()
-                .contentType(ContentType.JSON)
-                .body(user)
-                .patch("users/9")
-                .then()
-                .statusCode(200)
-                .log().body()
-                .extract().response();
-        // Impresión de Objeto enviado
-        System.out.println(response.asString());
+        userJsonResponse9 = patchRequest("/users/9", user);
+
+    // Obtención del usuario nuevamente
+    userJsonResponse9 = getRequest("users/9");
+    System.out.println("Usuario modificado " + userJsonResponse9.asString());
     }
 
 }
