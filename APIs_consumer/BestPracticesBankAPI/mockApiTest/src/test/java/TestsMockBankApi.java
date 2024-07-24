@@ -81,10 +81,10 @@ public class TestsMockBankApi extends apiBase{
         }
         // Solicitud nuevamente para verificar la creación de los 10 usuarios
         response = getRequest("/users");
-
+        Assert.assertEquals(response.getStatusCode(), 200);
         //Solicitud y asercion de endpoint "1"
         response = getRequest("/users/1");
-
+        Assert.assertEquals(response.getStatusCode(),  200);
 
         //Impresion por consola de Usuario 1
         System.out.println( "Creacion de usuarios: " +
@@ -142,10 +142,11 @@ public class TestsMockBankApi extends apiBase{
         System.out.println("Actualización de Número de Cuenta usuario 5 : \nValor anterior: "+  account +
                 "\nNuevo valor: " + responseUser.jsonPath().get("account"));
 
-
+        // Assersion de valores de enviado y obtenido
+        Assert.assertEquals(987654321, accountNumberUser5);
 
     }
-@Test
+    @Test
     public void verificaciónDeDeposito() {
         //Consulta al endpoint usuario de Id = 6 "users/6"
         Response userJsonResponse6 = getRequest("/users/6");
@@ -179,38 +180,40 @@ public class TestsMockBankApi extends apiBase{
 
         System.out.println("Valores de Depósito user 6 después de depositar: " + bdMoneyUpdate);
 
-
+        // Assersion de valores de enviado y obtenido
+        Assert.assertEquals(loadOfMoney, bdMoneyUpdate);
     }
 
-@Test
-public void verificacionDeRetiroDinero() {
-    // Consulta al endpoint usuario de Id = 9 "users/9"
-    Response userJsonResponse9 = getRequest("users/9");
+    @Test
+    public void verificacionDeRetiroDinero() {
+        // Consulta al endpoint usuario de Id = 9 "users/9"
+        Response userJsonResponse9 = getRequest("users/9");
 
-    // Obtención del objeto del usuario y posteriormente su cuenta
-    Map<String, Object> user = userJsonResponse9.jsonPath().getMap("");
-    Map<String, Object> accountMoney = (Map<String, Object>) user.get("account");
+        // Obtención del objeto del usuario y posteriormente su cuenta
+        Map<String, Object> user = userJsonResponse9.jsonPath().getMap("");
+        Map<String, Object> accountMoney = (Map<String, Object>) user.get("account");
 
-    //Obtención de valor actual de dinero convertido a objeto BigDecimal y redondeo de valor
-    BigDecimal currentMoney = new BigDecimal(userJsonResponse9.jsonPath().getDouble("account.money")).setScale(2, RoundingMode.HALF_UP);
-    System.out.println("Valores de Dinero user 9 antes de retiro " + currentMoney);
+        //Obtención de valor actual de dinero convertido a objeto BigDecimal y redondeo de valor
+        BigDecimal currentMoney = new BigDecimal(userJsonResponse9.jsonPath().getDouble("account.money")).setScale(2, RoundingMode.HALF_UP);
+        System.out.println("Valores de Dinero user 9 antes de retiro " + currentMoney);
 
-    BigDecimal extraction = new BigDecimal(110.20); // Valor de retiro
-    //Sustracción de valor de retiro al monto actual y redondeo del nuevo valor
-    currentMoney = currentMoney.subtract(extraction).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal extraction = new BigDecimal(110.20); // Valor de retiro
+        //Sustracción de valor de retiro al monto actual y redondeo del nuevo valor
+        currentMoney = currentMoney.subtract(extraction).setScale(2, RoundingMode.HALF_UP);
 
-    // Agregado del nuevo valor al objeto account
-    accountMoney.put("money", currentMoney.doubleValue());
+        // Agregado del nuevo valor al objeto account
+        accountMoney.put("money", currentMoney.doubleValue());
 
-    //Envío de valores a través de método PATCH
-    userJsonResponse9 = patchRequest("/users/9", user);
+        //Envío de valores a través de método PATCH
+        userJsonResponse9 = patchRequest("/users/9", user);
 
-    // Obtención del usuario nuevamente
-    userJsonResponse9 = getRequest("users/9");
-    //Obtención nuevamente de ultimo valor de dinero convertido a Objeto BigDecimal y redondeo de valor
-    BigDecimal obtainingCurrentMoney = new BigDecimal(userJsonResponse9.jsonPath().getDouble("account.money")).setScale(2, RoundingMode.HALF_UP);
-    System.out.println("Valores de Dinero user 9 despues  de retiro " + obtainingCurrentMoney);
-
+        // Obtención del usuario nuevamente
+        userJsonResponse9 = getRequest("users/9");
+        //Obtención nuevamente de ultimo valor de dinero convertido a Objeto BigDecimal y redondeo de valor
+        BigDecimal obtainingCurrentMoney = new BigDecimal(userJsonResponse9.jsonPath().getDouble("account.money")).setScale(2, RoundingMode.HALF_UP);
+        System.out.println("Valores de Dinero user 9 despues  de retiro " + obtainingCurrentMoney);
+        // Assersion de valores de enviado y obtenido
+        Assert.assertEquals(currentMoney, obtainingCurrentMoney);
 
     }
 
