@@ -8,8 +8,13 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
 
-public class TestsMockBankApi extends apiBase{
-
+/**
+ * Clase de pruebas para la API de usuarios.
+ */
+public class TestsMockBankApi extends ApiBase{
+    /**
+     * LImpia el endpoint de los usuarios
+     */
     @Test
     public void limpiarDatosEndpoint() {
 
@@ -34,6 +39,9 @@ public class TestsMockBankApi extends apiBase{
         System.out.println("Endpoint luego de limpiarlo: " + response.asString());
     }
 
+    /**
+     * Verifica la creación de 10 usuarios haciendo uso de POJO
+     */
     @Test
     public void pruebaCrearUsuarios() {
         // Instanciamos la clase Faker para implementar datos
@@ -66,7 +74,7 @@ public class TestsMockBankApi extends apiBase{
             Double randomMoney = faker.number().randomDouble(2, 0, 999999);
             BigDecimal bd = new BigDecimal(randomMoney);
             bd = bd.setScale(2, RoundingMode.HALF_UP);
-            account.put("money", randomMoney);
+            account.put("money", bd);
 
             // Agregado de valores correspondientes al objeto usuario
             user.setName(faker.name().fullName());
@@ -92,6 +100,9 @@ public class TestsMockBankApi extends apiBase{
 
     }
 
+    /**
+     * Verificación de duplicacion de correos en el endpoint "/users".
+     */
     @Test
     public void verificandoDuplicaciónDeCorreos() {
         //Consulta al endpoint usuarios "/users"
@@ -118,6 +129,10 @@ public class TestsMockBankApi extends apiBase{
         Assert.assertEquals(emailSet.size(), correos.size());
 
     }
+
+    /**
+     * Verificación de actulización de número de cuenta de "/users/5".
+     */
     @Test
     public void actualizandoNumeroDeCuenta() {
         //Consulta al endpoint usuario de Id = 5 "users/5"
@@ -146,6 +161,10 @@ public class TestsMockBankApi extends apiBase{
         Assert.assertEquals(987654321, accountNumberUser5);
 
     }
+
+    /**
+     * Verificación de depósito de dinero en endpoint "/users/6".
+     */
     @Test
     public void verificaciónDeDeposito() {
         //Consulta al endpoint usuario de Id = 6 "users/6"
@@ -184,6 +203,9 @@ public class TestsMockBankApi extends apiBase{
         Assert.assertEquals(loadOfMoney, bdMoneyUpdate);
     }
 
+    /**
+     * Verificacíón de retiro correcto de dinero en endpoint "/users/9".
+     */
     @Test
     public void verificacionDeRetiroDinero() {
         // Consulta al endpoint usuario de Id = 9 "users/9"
