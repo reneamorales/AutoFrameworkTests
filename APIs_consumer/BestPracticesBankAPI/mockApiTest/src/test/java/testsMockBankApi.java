@@ -11,7 +11,7 @@ import java.util.*;
 /**
  * Clase de pruebas para la API de usuarios.
  */
-public class TestsMockBankApi extends ApiBase{
+public class testsMockBankApi extends ApiBase{
     /**
      * LImpia el endpoint de los usuarios
      */
@@ -84,7 +84,7 @@ public class TestsMockBankApi extends ApiBase{
             user.setAccount(account);
 
             //Agregando el nuevo Usuario al endpoint
-            response = postRequest("/users", user);
+            postRequest("/users", user);
 
         }
         // Solicitud nuevamente para verificar la creación de los 10 usuarios
@@ -104,7 +104,7 @@ public class TestsMockBankApi extends ApiBase{
      * Verificación de duplicacion de correos en el endpoint "/users".
      */
     @Test
-    public void verificandoDuplicaciónDeCorreos() {
+    public void verificandoDuplicacionDeCorreos() {
         //Consulta al endpoint usuarios "/users"
         Response response = getRequest("/users");
 
@@ -166,7 +166,7 @@ public class TestsMockBankApi extends ApiBase{
      * Verificación de depósito de dinero en endpoint "/users/6".
      */
     @Test
-    public void verificaciónDeDeposito() {
+    public void verificacionDeDeposito() {
         //Consulta al endpoint usuario de Id = 6 "users/6"
         Response userJsonResponse6 = getRequest("/users/6");
 
@@ -187,7 +187,7 @@ public class TestsMockBankApi extends ApiBase{
         accountMoney.put("money", loadOfMoney.doubleValue());//Agregado de nuevo valor al objeto account
 
         //Envío a través de método PATCH
-        userJsonResponse6 = patchRequest("users/6", user);
+        patchRequest("users/6", user);
 
         // Obtención del usuario nuevamente
         userJsonResponse6 = getRequest("users/6");
