@@ -1,8 +1,10 @@
-var pageLocators = {
-    'titlePage': ".post-title"
+var pagelocators = {
+    title: ".post-title"
 }
 
 class CoursesPage{
-    title(){return cy.get(pageLocators.title).should(contain('Courses'))}
+    getTitle() {
+        return cy.get(pagelocators.title).should('contain', 'Courses');
+    }
 }
 export default CoursesPage;

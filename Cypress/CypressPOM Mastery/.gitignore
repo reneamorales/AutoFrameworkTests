@@ -5,6 +5,4 @@ node_modules/
 cypress.json
 
 # Ignorar algunos archivos de soporte de Cypress
-support/pages/NavbarPage.js
-support/pages/CoursesPage.js
-support/pages/BlogPage.js
+

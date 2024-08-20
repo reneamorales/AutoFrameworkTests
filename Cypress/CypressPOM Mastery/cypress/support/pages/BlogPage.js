@@ -1,5 +1,5 @@
 var pageLocators = {
-    'subtitle': ".wp-block-heading"
+    subtitle: ".wp-block-heading"
 }
 
 class BlogPage {
