@@ -1,3 +1,4 @@
+import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
@@ -39,7 +40,7 @@ public class ApiBase {
      * @param body El cuerpo de la solicitod en formato JSON.
      * @return La respuesta de la solicitud POST.
      */
-    protected Response postRequest(String endpoint, Object body) {
+    protected static Response postRequest(String endpoint, Object body) {
         return given()
                 .contentType(ContentType.JSON)
                 .body(body)

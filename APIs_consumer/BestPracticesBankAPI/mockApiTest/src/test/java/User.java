@@ -1,5 +1,9 @@
 import java.util.Map;
 
+/**
+ * Clase que representa a un usuario
+ *
+ */
 public class User {
 
         private String name;
@@ -18,8 +22,7 @@ public class User {
             this.account = account;
         }
 
-        // Getters and Setters for all attributes
-        public String getName() {
+    public String getName() {
             return name;
         }
 

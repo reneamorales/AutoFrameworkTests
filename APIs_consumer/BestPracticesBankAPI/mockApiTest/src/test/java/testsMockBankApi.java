@@ -1,12 +1,19 @@
 
+import com.google.gson.Gson;
+import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import net.datafaker.Faker;
 import org.testng.Assert;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
+
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
 
 /**
  * Clase de pruebas para la API de usuarios.
@@ -38,6 +45,12 @@ public class testsMockBankApi extends ApiBase{
         Assert.assertTrue(response.jsonPath().getList("").isEmpty());
         System.out.println("Endpoint luego de limpiarlo: " + response.asString());
     }
+
+    @BeforeTest
+    public void setup() {
+        RestAssured.baseURI = "https://665145ff20f4f4c4427756bc.mockapi.io/api/v1";
+    }
+
 
     /**
      * Verifica la creación de 10 usuarios haciendo uso de POJO
@@ -128,6 +141,56 @@ public class testsMockBankApi extends ApiBase{
         //Aserción de mismo tamaño de las variables
         Assert.assertEquals(emailSet.size(), correos.size());
 
+    }
+
+    /**
+     * Prueba del endpoint de inicio de sesión.
+     */
+    @Test
+    public void pruebaLogin() {
+
+        Response userJsonResponse1 = getRequest("users/1");
+        // Crear solicitud de inicio de sesión
+        LoginRequest loginRequest = new LoginRequest();
+        loginRequest.setUsername(userJsonResponse1.jsonPath().get("name"));
+        loginRequest.setPassword(userJsonResponse1.jsonPath().get("password"));
+        String nombreUser1 = userJsonResponse1.jsonPath().get("name");
+        System.out.println(nombreUser1);
+
+        Response response = given()
+                .contentType(ContentType.JSON)
+                .body(loginRequest)
+                .when()
+                .post("/login")
+                .then()
+                .statusCode(201)
+                .body("token", equalTo("token123"))
+                .body("message", equalTo("Login successful"))
+                .extract()
+                .response();
+
+        System.out.println("Respuesta de inicio de sesión exitosa: " + response.asString());
+    }
+
+    @Test
+    public void pruebaLoginFallido() {
+        // Crear solicitud de inicio de sesión fallida
+        LoginRequest loginRequest = new LoginRequest();
+        loginRequest.setUsername("user");
+        loginRequest.setPassword("wrongpassword");
+
+        Response response = given()
+                .contentType(ContentType.JSON)
+                .body(loginRequest)
+                .when()
+                .post("/login")
+                .then()
+                .statusCode(401)
+                .body("message", equalTo("Invalid credentials"))
+                .extract()
+                .response();
+
+        System.out.println("Respuesta de inicio de sesión fallida: " + response.asString());
     }
 
     /**

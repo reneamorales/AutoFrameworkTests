@@ -3,7 +3,7 @@ import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import org.hamcrest.Matcher;
 import org.testng.Assert;
-import org.testng.annotations.Test;pub
+import org.testng.annotations.Test;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -18,13 +18,12 @@ import static org.hamcrest.Matchers.*;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertTrue;
 
-public class starWarsTest {
-
+public class starWarsTest extends ApiBase{
     @Test
     public void endpointResponseSuccessful() {
 
         Response response;
-        response = given().get("https://swapi.dev/api/people/2/");
+        response = getRequest("people/2/");
         
         Assert.assertEquals(response.getStatusCode(), 200);
 
