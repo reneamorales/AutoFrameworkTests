@@ -8,6 +8,11 @@ const loginPage = new LoginPage();
 const navbarPage = new NavbarPage();
 const coursesPage = new CoursesPage();
 const blogPage = new BlogPage();
+const loginWithCredentials= (index)=>{
+    cy.get('@credentials').then((credentials) =>{
+      loginPage.login(credentials.users[index].username, credentials.users[index].password);
+    });
+};
 
 
 context('login-with-credentials', () => {
@@ -17,38 +22,28 @@ context('login-with-credentials', () => {
     });
 
     it('Successful login', () => {
-        cy.get('@credentials').then((credentials) => {
-            loginPage.usernameInput(credentials.users[0].username);
-            loginPage.passwordInput(credentials.users[0].password);
-            loginPage.loginButton();
+            loginWithCredentials(0);
 
             loginPage.message();
             loginPage.logOut()
-        });
     });
 
     it('Login with incorrect user', () => {
-        cy.get('@credentials').then((credentials) => {
-            loginPage.usernameInput(credentials.users[1].username);
-            loginPage.passwordInput(credentials.users[1].password);
-            loginPage.loginButton();
+            loginWithCredentials(1);
 
             loginPage.labelError();
-            loginPage.userErrorMessage();
+            loginPage.errorMessage('Your username is invalid!');
             
-        });
+
     });
     it('Login with incorrect password', () => {
-        cy.get('@credentials').then((credentials) => {
-            loginPage.usernameInput(credentials.users[2].username);
-            loginPage.passwordInput(credentials.users[2].password);
-            loginPage.loginButton();
+            loginWithCredentials(2);
 
             loginPage.labelError();
-            loginPage.passwordErrorMessage();
+            loginPage.errorMessage('Your password is invalid!');
             
-        });
     });
+   
 
     it('Navigate to Courses Page', ()=>{
       navbarPage.clickCourses();

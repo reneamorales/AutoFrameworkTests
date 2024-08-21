@@ -8,6 +8,13 @@ var pageLocators = {
 };
 
 class LoginPage{
+
+    login(user, password){
+        this.usernameInput(user);
+        this.passwordInput(password);
+        this.loginButton();
+    }
+    
     usernameInput(user){
         return cy.get(pageLocators.usernameInput).type(user + '{enter}');
     }
@@ -26,12 +33,10 @@ class LoginPage{
     labelError(){
         return cy.get(pageLocators.labelError).should('be.visible');
     }
-    userErrorMessage(){
-        return cy.get(pageLocators.labelError).should('contain', 'Your username is invalid!')
+    errorMessage(expectedMessage){
+        return cy.get(pageLocators.labelError).should('contain', expectedMessage)
     }
-    passwordErrorMessage(){
-        return cy.get(pageLocators.labelError).should('contain', 'Your password is invalid!')
-    }
+    
 }
 
 export default LoginPage;
